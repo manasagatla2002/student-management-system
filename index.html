@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Student Management System</h2>
+
+    <div class="card p-4 shadow">
+        <div class="row">
+            <div class="col">
+                <input type="hidden" id="studentId">
+                <input type="text" id="name" class="form-control" placeholder="Enter Name">
+            </div>
+            <div class="col">
+                <input type="number" id="age" class="form-control" placeholder="Enter Age">
+            </div>
+            <div class="col">
+                <button class="btn btn-primary w-100" onclick="saveStudent()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+</div>
+
+<script>
+
+const API_URL = "http://localhost:8081/students";
+
+function saveStudent() {
+    const id = document.getElementById("studentId").value;
+    const name = document.getElementById("name").value;
+    const age = document.getElementById("age").value;
+
+    const student = { name, age };
+
+    if (id) {
+        fetch(API_URL + "/" + id, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(student)
+        }).then(() => {
+            resetForm();
+            loadStudents();
+        });
+    } else {
+        fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(student)
+        }).then(() => {
+            resetForm();
+            loadStudents();
+        });
+    }
+}
+
+function loadStudents() {
+    fetch(API_URL)
+    .then(response => response.json())
+    .then(data => {
+        const table = document.getElementById("studentTable");
+        table.innerHTML = "";
+
+        data.forEach(student => {
+            table.innerHTML += `
+                <tr>
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.age}</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" onclick="editStudent(${student.id}, '${student.name}', ${student.age})">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteStudent(${student.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    });
+}
+
+function editStudent(id, name, age) {
+    document.getElementById("studentId").value = id;
+    document.getElementById("name").value = name;
+    document.getElementById("age").value = age;
+}
+
+function deleteStudent(id) {
+    fetch(API_URL + "/" + id, {
+        method: "DELETE"
+    }).then(() => loadStudents());
+}
+
+function resetForm() {
+    document.getElementById("studentId").value = "";
+    document.getElementById("name").value = "";
+    document.getElementById("age").value = "";
+}
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
